@@ -1,0 +1,37 @@
+services:
+  backend:
+    build: ./backend
+    container_name: alfa-backend
+    restart: unless-stopped
+    environment:
+      # Пока Ollama не установлена — адрес недоступен, и это нормально:
+      # система работает на ML и поведенческом анализе, индикатор LLM просто серый.
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b-instruct}
+      GREY_LOW: "0.30"
+      GREY_HIGH: "0.85"
+    volumes:
+      - alfa_data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - alfa_internal
+
+  frontend:
+    build: ./frontend
+    container_name: alfa-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - alfa_internal
+      - proxy
+
+volumes:
+  alfa_data:
+
+networks:
+  alfa_internal:
+    driver: bridge
+  proxy:
+    external: true
